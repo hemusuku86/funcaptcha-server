@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from util.log import logger
 from util.model_support_fetcher import ModelSupportFetcher
 
-app = Flask()
+app = Flask(__name__)
 PORT = 8181
 IS_DEBUG = True
 fetcher = ModelSupportFetcher()
@@ -40,6 +40,9 @@ def process_image(base64_image: str, variant: str):
     logger.debug(f"predict {variant} result: {ans}")
     return ans
 
+@app.route("/")
+def index():
+    return "hello, world!"
 
 @app.route("/createTask")
 def create_task():
