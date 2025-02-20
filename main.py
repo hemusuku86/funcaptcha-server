@@ -4,14 +4,15 @@ import time
 from io import BytesIO
 
 from PIL import Image
-from fastapi import FastAPI, HTTPException, Request
+#from fastapi import FastAPI, HTTPException, Request
+from flask import Flask, request, jsonify
 from funcaptcha_challenger import predict
 from pydantic import BaseModel
 
 from util.log import logger
 from util.model_support_fetcher import ModelSupportFetcher
 
-app = FastAPI()
+app = Flask()
 PORT = 8181
 IS_DEBUG = True
 fetcher = ModelSupportFetcher()
@@ -40,8 +41,9 @@ def process_image(base64_image: str, variant: str):
     return ans
 
 
-@app.post("/createTask")
-async def create_task(data: TaskData):
+@app.route("/createTask")
+def create_task():
+    data = request.json
     client_key = data.clientKey
     task_type = data.task.type
     image = data.task.image
@@ -63,16 +65,16 @@ async def create_task(data: TaskData):
         ans["status"] = "error"
         ans["solution"]["objects"] = []
 
-    return ans
+    return jsonify(ans)
 
 
-@app.get("/support")
-async def support():
+@app.route("/support")
+def support():
     # 从文件中读取模型列表
     return fetcher.supported_models
 
 
-@app.exception_handler(Exception)
+"""@app.exception_handler(Exception)
 async def error_handler(request: Request, exc: Exception):
     logger.error(f"error: {exc}")
     return {
@@ -80,9 +82,10 @@ async def error_handler(request: Request, exc: Exception):
         "errorCode": "ERROR_UNKNOWN",
         "status": "error",
         "solution": {"objects": []}
-    }
+    }"""
 
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=PORT)
+    app.run(host="0.0.0.0")
+    #import uvicorn
+    #uvicorn.run(app, host="0.0.0.0", port=PORT)
